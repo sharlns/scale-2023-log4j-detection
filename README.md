@@ -5,7 +5,50 @@ SCALE 20x, Pasadena during the `The Next Log4jshell?! Preparing for CVEs with eB
 
 ## Environment
 
-Setup Ubuntu machine
+### Setup Tetragon as a systemd managed service
+
+Setup Ubuntu VM on Cloud (I specifically used GKE and Ubuntu LTS 22.04). Set the external IP to static IP
+instead of an ephemeral one, it'll be reachable from the outside later.
+
+Install Tetragon as a standalone systemd managed service on the Ubuntu VM. For the instructions, 
+follow this [guide](https://github.com/cilium/tetragon/tree/main/docs/deployment/package), but do not
+start the service until the configurations are not completed.
+
+Place the following configuration files under the `/etc/tetragon/tetragon.conf.d/*`:
+```bash
+root@scale-2023-log4j-ebpf-vm:/etc/tetragon/tetragon.conf.d# ls -l
+total 16
+-rw-r--r-- 1 root root 105 Mar  4 16:04 export-allowlist
+-rw-r--r-- 1 root root  35 Mar  4 16:04 export-filename
+-rw-r--r-- 1 root root  31 Mar  4 16:04 hubble-lib
+-rw-r--r-- 1 root root  16 Mar  4 16:04 server-address
+-rw-r--r-- 1 root root  16 Mar  4 16:04 config-file
+```
+
+Where the content of each file is
+```bash
+cat export-allowlist
+{"event_set":["PROCESS_TRACEPOINT", "PROCESS_LOADER", "PROCESS_EXIT", "PROCESS_EXEC", "PROCESS_KPROBE"]}
+root@scale-2023-log4j-ebpf-vm:/etc/tetragon/tetragon.conf.d# cat export-filename
+/var/log/tetragon/tetragon.log
+root@scale-2023-log4j-ebpf-vm:/etc/tetragon/tetragon.conf.d# cat hubble-lib
+/usr/local/lib/hubble-fgs/bpf/
+root@scale-2023-log4j-ebpf-vm:/etc/tetragon/tetragon.conf.d# cat server-address
+localhost:54321
+root@scale-2023-log4j-ebpf-vm:/etc/tetragon/tetragon.conf.d# cat config-file
+/etc/tetragon/policy/securitypolicy.yaml
+```
+
+Then place the `securitypolicy.yaml` file under the `/etc/tetragon/policy` directory.
+
+### Download Log4jshell PoC
+
+For the PoC, clone the following repository, and follow the remaining instructions from there:
+```bash
+git clone https://github.com/kozmer/log4j-shell-poc.git
+```
+
+## Demo 
 
 (Terminal 0): Start Tetragon:
 ```bash
