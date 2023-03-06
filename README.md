@@ -213,6 +213,7 @@ the reverse shell was sent. And then we can see that the `/bin/sh` process start
 🧹 close    /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java tcp 10.186.0.24:36895 -> 5.204.80.64:60463
 ```
 
+Tetragon events for the `ls -l` command:
 ```bash
 🚀 process  /bin/ls -l
 📬 open     /bin/ls /etc/passwd
@@ -220,6 +221,7 @@ the reverse shell was sent. And then we can see that the `/bin/sh` process start
 💥 exit     /bin/ls -l 0
 ```
 
+Tetragon events for `cat /etc/passwd`:
 ```bash
 🚀 process  /bin/cat /etc/passwd
 📬 open     /bin/cat /etc/passwd
@@ -227,6 +229,7 @@ the reverse shell was sent. And then we can see that the `/bin/sh` process start
 💥 exit     /bin/cat /etc/passwd 0
 ```
 
+Tetragon events for `cat /etc/shadow`:
 ```bash
 🚀 process  /bin/cat /etc/shadow
 📬 open     /bin/cat /etc/shadow
@@ -234,6 +237,7 @@ the reverse shell was sent. And then we can see that the `/bin/sh` process start
 💥 exit     /bin/cat /etc/shadow 0
 ```
 
+Tetragon events for `vi /etc/passwd`
 ```bash
 🚀 process  /usr/bin/vi /etc/passwd
 📬 open     /usr/bin/vi /etc/passwd
